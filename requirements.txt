@@ -5,5 +5,4 @@ plotly
 matplotlib
 seaborn
 hydralit_components
-warnings
 numpy

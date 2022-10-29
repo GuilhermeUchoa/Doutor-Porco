@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pandas_datareader as pdr
 import warnings
-warnings.simplefilter("ignore")
+#warnings.simplefilter("ignore")
 
 
 #Atualizar dados atuais
