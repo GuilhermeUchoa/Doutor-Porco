@@ -1,15 +1,10 @@
+from nbformat import write
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import matplotlib.pyplot as plt
-import seaborn as sns
-import hydralit_components as hc
-#from library.data_refresh import atualizar_dados
 import numpy as np
 import pandas_datareader as pdr
-import os
-#import warnings
-#warnings.simplefilter("ignore")
+
 
 #Carregando dataframe
 df_proventos = pd.read_csv('data/df_proventos.csv')
@@ -35,9 +30,6 @@ def atualizar_dados():
     for i in range(len(df_proventos['Pagamento'])):
         df_proventos['Pagamento'].iloc[i]= df_proventos['Pagamento'].iloc[i][3:] 
         
-    #Transformar nomes em simples nomes
-    for i in range(len(df_proventos['Produto'])):
-        df_proventos['Produto'].iloc[i] = df_proventos['Produto'].iloc[i].split('-')[0]
     
     #pegar dados de df_negociacao para criar em posicao valor total investido
     ativosjanegociados=[]
@@ -73,31 +65,26 @@ def atualizar_dados():
                 
     
     #dados historicos
-
-    
-
-    
     df_fii_dadoHistorico = pdr.get_data_yahoo(df_posicao_fii['Código de Negociação']+'.SA',start="2022-01-01")['Close']
     df_acao_dadoHistorico = pdr.get_data_yahoo(df_posicao_acao['Código de Negociação']+'.SA',start="2022-01-01")['Close']
         
-    #Atualizar dados atuais a partir do DFdadohistorico
-    
+    #Atualizar dados atuais a partir do DFdadohistorico  
     for i in range(len(df_posicao_fii['Código de Negociação'])):
             for j in  range(len(df_fii_dadoHistorico.columns)):                
                 if df_posicao_fii['Código de Negociação'].iloc[i] == df_fii_dadoHistorico.columns[j][:-3]:                  
-                    df_posicao_fii['Valor Atualizado'][i] =  round(df_fii_dadoHistorico[df_fii_dadoHistorico.columns[j]][-1],2)
+                    df_posicao_fii['Valor Atualizado'][i] =  round(df_fii_dadoHistorico[df_fii_dadoHistorico.columns[j]][-1],2)                   
+    df_posicao_fii = df_posicao_fii.rename(columns = {"Valor Atualizado":"Cotacao Atual"})
 
     for i in range(len(df_posicao_acao['Código de Negociação'])):
         for j in  range(len(df_acao_dadoHistorico.columns)):                
             if df_posicao_acao['Código de Negociação'].iloc[i] == df_acao_dadoHistorico.columns[j][:-3]:                  
-                df_posicao_acao['Valor Atualizado'][i] =  round(df_acao_dadoHistorico[df_acao_dadoHistorico.columns[j]][-1],2)
-    
-
+                df_posicao_acao['Valor Atualizado'][i] =  round(df_acao_dadoHistorico[df_acao_dadoHistorico.columns[j]][-1],2)  
+    df_posicao_acao = df_posicao_acao.rename(columns = {"Valor Atualizado":"Cotacao Atual"})
     
         
     #Cria valor total atual   
-    df_posicao_fii['Valor total atual'] = df_posicao_fii['Valor Atualizado'] * df_posicao_fii['Quantidade']
-    df_posicao_acao['Valor total atual'] = df_posicao_acao['Valor Atualizado'] * df_posicao_acao['Quantidade']
+    df_posicao_fii['Valor total atual'] = df_posicao_fii['Cotacao Atual'] * df_posicao_fii['Quantidade']
+    df_posicao_acao['Valor total atual'] = df_posicao_acao['Cotacao Atual'] * df_posicao_acao['Quantidade']
     
     #Criar preço medio
     df_posicao_acao['Preco medio'] = df_posicao_acao['Valor total investido'] / df_posicao_acao['Quantidade'] 
@@ -146,13 +133,23 @@ def atualizar_dados():
 
     writer.save()
 
+#Variaveis Nu_Bank
+nubank_aplicado = 8402.01
+nubank_provento = 55.87
 
 #Variaveis usadas
 compra = round(df_negociacao[df_negociacao['Tipo de Movimentação']=='Compra']['Valor'].sum(),2)
 venda = round(df_negociacao[df_negociacao['Tipo de Movimentação']=='Venda']['Valor'].sum(),2)
-totalProventos = round(df_proventos['Valor líquido'].sum(),2)
-pl = df_posicao_fii['Valor total atual'].sum() + df_posicao_acao['Valor total atual'].sum()
-rentabilidade = pl-(compra-venda)
+valor_aplicado = round((compra-venda) + nubank_aplicado,2)
+
+totalProventos = round(df_proventos['Valor líquido'].sum(),2)+nubank_provento
+
+pl = round(df_posicao_fii['Valor total atual'].sum() + df_posicao_acao['Valor total atual'].sum() + nubank_aplicado + totalProventos,2)
+
+rentabilidade = round(pl - valor_aplicado,2)
+rentabilidade_relativa = rentabilidade/pl
+
+
 
 #Configuracao da pagina 
 st.set_page_config(
@@ -173,11 +170,11 @@ with st.container():
         st.header('Patrimônio Atual')
         st.success(round(pl,2),icon="💲")
         st.header('Valor aplicado')
-        st.success(round(compra-venda,2),icon="💲")
+        st.success(valor_aplicado,icon="💲")
         st.header('Rentabilidade real')
-        st.success(round(rentabilidade+totalProventos,2),icon="💲")
+        st.success(rentabilidade,icon="💲")
         st.header('Rentabilidade relativa')
-        st.success(str(round(((rentabilidade+totalProventos)/pl)*100,2))+"%",icon="💲")
+        st.success(str(round((rentabilidade*100)/pl,2))+"%",icon="💲")
         st.header('Total de proventos ')
         st.success(round(totalProventos,2),icon="💲")
         
@@ -185,19 +182,17 @@ with st.container():
 
 with st.container():
     
-    tab = st.tabs(["📄 Tabela ", "💲 Proventos ", "📊 Histogramas ", "📶 Desempenho da carteira ","♨️ Objetivos ",
-                                                        "💡 Ideias ", "☕ Atualizar dados "," 🩺 Detalhes da conta " ,"🔴 Sobre Doutor Porco ", ])
+    tab = st.tabs(["📄 Tabela ", "💲 Proventos ","📶 Desempenho da carteira ","♨️ Objetivos ",
+                                                        "🏦 Bancos "," 🩺 Detalhes da conta "," ☕ Atualizar dados "  ])
 
 
     with tab[0]:
         st.title('Ativos negociados ') 
         
-        st.dataframe(df_posicao_fii[['Código de Negociação','Valor Atualizado',
-                                'Valor total atual','Valor total investido',
+        st.dataframe(df_posicao_fii[['Código de Negociação','Cotacao Atual',
                                 'Preco medio','rentabilidade']].style.format("{:.6}"))
         
-        st.dataframe(df_posicao_acao[['Código de Negociação','Valor Atualizado',
-                                'Valor total atual','Valor total investido',
+        st.dataframe(df_posicao_acao[['Código de Negociação','Cotacao Atual',
                                 'Preco medio','rentabilidade']].style.format("{:.6}"))  
     
   
@@ -214,42 +209,8 @@ with st.container():
                             height=460))
         
         
-    with tab[2]:   
-        
 
-        
-        fig1 = plt.figure(figsize=(20,20))
-        for i in range(1,len(df_fii_dadoHistorico.columns)):
-            plt.subplot(len(df_fii_dadoHistorico.columns),2,i+0)
-            sns.histplot(df_fii_dadoHistorico[df_fii_dadoHistorico.columns[i]],kde=True)
-            plt.axvline(df_fii_dadoHistorico[df_fii_dadoHistorico.columns[i]].iloc[-1],color='green',label='Preço atual') #Preço atual
-            plt.legend()
-            plt.axvline(df_fii_dadoHistorico[df_fii_dadoHistorico.columns[i]].mode().mean(),color='red',label='Preço Modal medio') #Preço modal
-            plt.legend()
-            plt.xlabel("")
-            plt.ylabel(round(df_fii_dadoHistorico[df_fii_dadoHistorico.columns[i]].iloc[-1],2))#preco atual
-            plt.title(df_fii_dadoHistorico.columns[i])
-        
-        st.title('Fundos imobiliarios')    
-        st.pyplot(fig1)
-            
-        fig2 = plt.figure(figsize=(25,25))
-        for i in range(1,len(df_acao_dadoHistorico.columns)):
-            plt.subplot(len(df_acao_dadoHistorico.columns),2,i+0)
-            sns.histplot(df_acao_dadoHistorico[df_acao_dadoHistorico.columns[i]],kde=True)
-            plt.axvline(df_acao_dadoHistorico[df_acao_dadoHistorico.columns[i]].iloc[-1],color='green',label='Preço atual') #Preço atual
-            plt.legend()
-            plt.axvline(df_acao_dadoHistorico[df_acao_dadoHistorico.columns[i]].mode().mean(),color='red',label='Preço Modal medio') #Preço modal
-            plt.legend()
-            plt.xlabel("")
-            plt.ylabel(round(df_acao_dadoHistorico[df_acao_dadoHistorico.columns[i]].iloc[-1],2))#preco atual
-            plt.title(df_acao_dadoHistorico.columns[i])
-            
-        st.title('Ações')  
-        st.pyplot(fig2)
-            
-
-    with tab[3]:
+    with tab[2]:
         
         st.title('Fundos imobiliarios')
         st.plotly_chart(px.line(df_fii_dadoHistorico_desempenho[df_fii_dadoHistorico_desempenho.columns[1:]],width = 1500,height=500  ))
@@ -258,7 +219,7 @@ with st.container():
 
         
     #Objetivos       
-    with tab[4]:
+    with tab[3]:
         #Variaveis usadas
         anual = round(((rentabilidade+totalProventos)/pl)*100,2)
         carteira_lista=[]
@@ -283,7 +244,7 @@ with st.container():
             if  carteira >= valor_objetivo:
                 break
         
-        fig3 = px.line(carteira_lista,width = 1700,height=500)
+        fig3 = px.line(carteira_lista,width = 1300,height=500)
         fig3.add_hline(y=pl,line_dash='dash')
     
         
@@ -297,7 +258,7 @@ with st.container():
         with col3:
             st.metric("Objetivo de rendimento mensal", '0.5%',"Valor atual: "+str(round(((rentabilidade+totalProventos)/pl)*100/12,2)))
         with col4:    
-            st.metric("rendimento bruto alcançado", "R$ "+str(((investimento_Mensal*meses_Trabalho)-round(carteira_lista[-1],2))*-1),"Valor atual: "+str(round(rentabilidade+totalProventos,2)))
+            st.metric("rendimento bruto alcançado", "R$ "+str(round(((investimento_Mensal*meses_Trabalho)-round(carteira_lista[-1],2))*-1,2)),"Valor atual: "+str(round(rentabilidade+totalProventos,2)))
             
        
         st.plotly_chart(fig3)
@@ -307,40 +268,13 @@ with st.container():
             st.warning('⚠️⚠️⚠️ Hey você precisa de mais meses para alcançar o seu objetivo ⚠️⚠️⚠️',)
              
     
-    with tab[5]:    
-        txt = st.text_area('Digite suas ideias', )
-        
-        with open('note/ideias.txt','a') as f:
-            lines = f.write(txt)
-            
+    with tab[4]:    
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("NuBank","R$ "+str(nubank_aplicado),'Provimento: '+str(nubank_provento))
 
-        ler =  open('note/ideias.txt','r')
-        st.write('Ideias salvas', ler.readlines())
-        ler.close()
-        
-    with tab[6]:
-        
-        upload = st.file_uploader('Arquivos B3 Negociacao, Posicao, Proventos recebidos:',type=['xlsx'],accept_multiple_files=False)
-        if upload is not None:
-            df = pd.read_excel(upload)
-            st.write(upload.name[:19])
-            if upload.name[:10] == 'negociacao':   
-                df.to_excel('data/negociacao.xlsx')
-                st.write('Salvo... negociacao')
-            elif upload.name[:7] == 'posicao':   
-                df.to_excel('data/posicao.xlsx')
-                st.write('Salvo...posicao')
-            elif upload.name[:19] == 'proventos-recebidos':   
-                df.to_excel('data/proventos-recebidos.xlsx')
-                st.write('Salvo...proventos')
-
-        if st.button("Atualizar valores"):
-            with hc.HyLoader('Now doing loading',hc.Loaders.standard_loaders,index=[0]):
-                atualizar_dados()
-                st.experimental_rerun()
-                
     
-    with tab[7]:
+    with tab[5]:
 
         
         col1, col2, col3, col4 = st.columns(4)
@@ -357,28 +291,38 @@ with st.container():
             st.metric(' - ',' - ')  
             st.metric("Objetivo de rendimento relativo mensal", '0.5%',"Valor atual: "+str(round(((rentabilidade+totalProventos)/pl)*100/12,2)))
         with col4: 
-            st.metric('Rentabilidade relativa',str(round(((rentabilidade+totalProventos)/pl)*100,2))+'%' ,)
+            st.metric('Rentabilidade relativa',str(round(rentabilidade_relativa*100,2))+'%' ,)
             st.metric('Total de proventos ',"R$ "+str(round(totalProventos,2)))   
-            st.metric("rendimento bruto alcançado", "R$ "+str(((investimento_Mensal*meses_Trabalho)-round(carteira_lista[-1],2))*-1),"Valor atual: "+str(round(rentabilidade+totalProventos,2)))
+            st.metric("rendimento bruto alcançado", "R$ "+str(round(((investimento_Mensal*meses_Trabalho)-round(carteira_lista[-1],2))*-1,2)),"Valor atual: "+str(round(rentabilidade+totalProventos,2)))
 
+                  
         
+    with tab[6]:
         
-    with tab[8]:
-        col = st.columns(2)
-        with col[0]:
-            st.image('img/pig.jpg',caption='')
-            
-        with col[1]:
-            st.title('Sobre Nós:') 
-            st.text('''
-                    
-                       Somos um sistema financeiro que busca integrar informações no sistema B3/CEI
-                       e informações bancárias com o intuido de gerenciar, sua vida financeira,
-                       de formar que auxilie para fazer planos rentaveis.  
-            
-                    
-                    
-                    
-                    ''')   
-        
+        upload = st.file_uploader('Arquivos B3 Negociacao, Posicao, Proventos recebidos:',type=['xlsx'],accept_multiple_files=False)
+        if upload is not None:
+            df = pd.read_excel(upload)
+            st.write(upload.name[:19])
+            if upload.name[:10] == 'negociacao':   
+                df.to_excel('data/negociacao.xlsx')
+                st.write('Salvo... negociacao')
+            elif upload.name[:7] == 'posicao':   
+                
+                df_posicao_acao = pd.read_excel(upload,sheet_name='Acoes')
+                df_posicao_fii = pd.read_excel(upload,sheet_name='Fundo de Investimento')
+                
+                writer = pd.ExcelWriter(r'data/posicao.xlsx', engine='xlsxwriter')
+                df_posicao_acao.to_excel(writer,sheet_name='Acoes')
+                df_posicao_fii.to_excel(writer,sheet_name='Fundo de Investimento')
+                writer.save()
+    
+                st.write('Salvo...posicao')
+                
+            elif upload.name[:19] == 'proventos-recebidos':   
+                df.to_excel('data/proventos-recebidos.xlsx')
+                st.write('Salvo...proventos')
 
+        if st.button("Atualizar valores"):
+            atualizar_dados()
+            st.experimental_rerun()
+            
