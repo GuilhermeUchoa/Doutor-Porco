@@ -133,8 +133,8 @@ def atualizar_dados():
     writer.save()
 
 #Variaveis Nu_Bank
-nubank_aplicado = 8402.01
-nubank_provento = 55.87
+nubank_aplicado = 0
+nubank_provento = 0
 
 #Variaveis usadas
 compra = round(df_negociacao[df_negociacao['Tipo de Movimentação']=='Compra']['Valor'].sum(),2)
