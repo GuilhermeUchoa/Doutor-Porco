@@ -1,95 +1,26 @@
-button.css-1uqmt5j.edgvbvh9{
-
-    background-color: rgb(255 0 0);
-
-
-}
-
-footer{
-
-    visibility: hidden;
-}
-
-
-div.stDataFrame {
-    margin-left: 20%;
-    margin-right: auto;
-    margin-top: 3%;
-
-   }
-
-button.css-6kekos.edgvbvh9{
-
-    color: white;
-    background-color: #dc3545;
-    margin-top: 5%;
-    margin-left: 40%;
-}
-
-div.object-key-val{
-
-    visibility: ;
-}
-
-div.css-1v0mbdj.etr89bj1.img{
-
-
-    width: 1000px;
+/*titulo das tabs*/
+span.css-10trblm.e16nr0p30{
+    text-align: center;
 
 }
 
-div.st-ba{
-    
+/*tabela inicial*/
+
+div.css-1a32fsj.e19lei0e0{
+    text-align: center;
+
+}
+
+/*distanciar opcoes na tab*/
+div.st-be.st-b3.st-bf.st-bg.st-bh.st-bi.st-bj.st-bk.st-bl.st-bm.st-bn.st-bn{
+
+    gap: 6rem;
+}
+
+/*Arredondar imagem dos valores na tabala lateral*/
+div.st-ae.st-af.st-ag.st-ah.st-ai.st-aj.st-ak.st-ba.st-am.st-bb.st-an.st-ao.st-ap.st-aq.st-ar.st-as.st-bc.st-au.st-av.st-aw.st-ax.st-ay.st-b9.st-b0.st-b1.st-b2.st-b3.st-b4.st-b5{
     border-radius: 50px;
 
 }
 
-div.st-bb {
-    
-    background-color: rgba(255, 255, 255, 0.253);
-}
-
-
-
-img, svg {
-    vertical-align: middle;
-    border-radius: 50px;
-}
-
-
-
-element.style {
-     width: 1000px;
-    
-    }
-
-h1{
-
-
-    background-color:  rgb(243 243 243 / 43%);
-    border-radius: 50px;    
-    margin-left: 22%;
-    margin-right: 10%;
-    width: 50%;
-    text-align: center
-
-}
-
-
-div.st-bn {
-
-    margin-left: 8%;
- 
-}
-
-div.css-1offfwp.e16nr0p33{
-
-    margin-left: 38%;
-}
-
-div.css-ocqkz7.e1tzin5v4{
-
-    margin-left: 5%;
-    margin-top: 3%;
-}
 

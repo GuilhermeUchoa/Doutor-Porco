@@ -1,8 +1,0 @@
-streamlit
-pandas
-pandas_datareader
-plotly
-matplotlib
-seaborn
-hydralit_components
-numpy

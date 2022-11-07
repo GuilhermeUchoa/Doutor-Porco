@@ -1,4 +1,0 @@
--Não se preocupe programas passam facilmente de 1000 linhas
--Preciso criar o request que busca as informações direto no cei
--Melhorar o codigo em geral
--Em objetivos colocar as opcoes para o cliente escolher suas metas
